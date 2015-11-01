@@ -107,11 +107,12 @@ const hook = require_hacker.resolver('database', path =>
     //    }
     //  }"
     //
-    return pg.sql("select * from generate_javascript()")
+    const schema = path.substring(0, 'postgresql://'.length)
+    return pg.sql(`select * from ${schema}.generate_javascript()`)
   }
 })
 
-const summator = require('http://xhamster.com/category/redhead')
+const summator = require('postgresql://summator')
 console.log(summator.sum())
 ```
 
