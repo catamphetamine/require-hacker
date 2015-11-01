@@ -111,7 +111,8 @@ const hook = require_hacker.resolver('database', path =>
   }
 })
 
-const code = require('http://xhamster.com/category/redhead')
+const summator = require('http://xhamster.com/category/redhead')
+console.log(summator.sum())
 ```
 
 And don't ask me what for.
