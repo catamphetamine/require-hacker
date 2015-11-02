@@ -2,7 +2,7 @@
   "name": "require-hacker",
   "version": "1.0.0",
   "description": "Provides a hooking mechanism for Node.js require() calls",
-  "main": "babel-transpiled-modules/require-hacker.js",
+  "main": "babel-transpiled-modules/index.js",
   "dependencies": {
     "babel-runtime": "^5.6.20",
     "colors": "^1.1.2"
