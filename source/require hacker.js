@@ -13,6 +13,7 @@ const original_findPath = Module._findPath
 
 export default class Require_hacker
 {
+	preceding_abstract_path_resolvers = []
 	abstract_path_resolvers = []
 	
 	// original_loaders = {}
@@ -34,12 +35,24 @@ export default class Require_hacker
 			const request = parameters[0]
 			// const paths = parameters[1]
 
+			// preceeding resolvers
+			for (let resolver of this.preceding_abstract_path_resolvers)
+			{
+				const resolved = resolver.resolve(request)
+				if (typeof resolved !== 'undefined')
+				{
+					return resolved
+				}
+			}
+
+			// original Node.js loader
 			const filename = original_findPath.apply(undefined, parameters)
 			if (filename !== false)
 			{
 				return filename
 			}
 
+			// rest resolvers
 			for (let resolver of this.abstract_path_resolvers)
 			{
 				const resolved = resolver.resolve(request)
@@ -73,7 +86,7 @@ export default class Require_hacker
 	//
 	// returns an object with an .undo() method
 	//
-	resolver(id, resolver)
+	resolver(id, resolver, options = {})
 	{
 		validate.resolver(id, resolver)
 
@@ -98,7 +111,14 @@ export default class Require_hacker
 			}
 		}
 
-		this.abstract_path_resolvers.push(resolver_entry)
+		if (options.precede_node_loader)
+		{
+			this.preceding_abstract_path_resolvers.push(resolver_entry)
+		}
+		else
+		{
+			this.abstract_path_resolvers.push(resolver_entry)
+		}
 
 		const hook = this.hook(id, path => 
 		{
@@ -112,6 +132,7 @@ export default class Require_hacker
 			unmount: () =>
 			{
 				// javascript arrays still have no .remove() method in the XXI-st century
+				this.preceding_abstract_path_resolvers = this.preceding_abstract_path_resolvers.filter(x => x !== resolver_entry)
 				this.abstract_path_resolvers = this.abstract_path_resolvers.filter(x => x !== resolver_entry)
 				hook.unmount()
 			}

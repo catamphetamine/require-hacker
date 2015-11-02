@@ -68,4 +68,32 @@ describe('require hacker', function()
 		const would_fail = () => require('http://xhamster.com')
 		would_fail.should.throw('Cannot find module')
 	})
+
+	it('should hook into arbitrary path loading (preceding Node.js original loader)', function()
+	{
+		const require_hacker = new Require_hacker({ debug: false })
+
+		// mount require() hook
+		const hook = require_hacker.resolver('javascript', (path, flush_cache) =>
+		{
+			// maybe also test flush_cache() some time
+
+			if (path.indexOf('/dummy.js') >= 0)
+			{
+				return `module.exports = "Free porn"`
+			}
+		},
+		{ precede_node_loader: true })
+
+		// will output text file contents
+		require('./dummy.js').should.equal('Free porn')
+
+		// unmount require() hook
+		hook.unmount()
+
+		// usual Node.js loader takes precedence
+		require('./dummy.js').should.equal('Hot lesbians making out')
+		// clear require() cache (just in case)
+		delete require.cache[path.resolve(__dirname, './dummy.js')]
+	})
 })
