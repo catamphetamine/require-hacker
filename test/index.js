@@ -52,20 +52,20 @@ describe('require hacker', function()
 		{
 			// maybe also test flush_cache() some time
 
-			if (path.indexOf('/test.txt') >= 0)
+			if (path.indexOf('http://xhamster.com') >= 0)
 			{
-				return `module.exports = "${fs.readFileSync(path).toString()}"`
+				return `module.exports = "Free porn"`
 			}
 		})
 
 		// will output text file contents
-		require('./test.txt').should.equal('Hot threesome interracial with double penetration')
+		require('http://xhamster.com').should.equal('Free porn')
 
 		// unmount require() hook
 		hook.unmount()
 
-		// will throw "SyntaxError: Unexpected token ILLEGAL"
-		const would_fail = () => require('./another test.txt')
-		would_fail.should.throw(SyntaxError)
+		// will throw "Error: Cannot find module"
+		const would_fail = () => require('http://xhamster.com')
+		would_fail.should.throw('Cannot find module')
 	})
 })
