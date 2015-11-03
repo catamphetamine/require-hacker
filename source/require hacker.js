@@ -8,6 +8,7 @@ import path   from 'path'
 import Module from 'module'
 
 import Log from './tools/log'
+import { ends_with } from './helpers'
 
 const original_findPath = Module._findPath
 
@@ -96,17 +97,20 @@ export default class Require_hacker
 			resolve: path =>
 			{
 				const resolved_path = `${path}.${id}`
-				const flush_cache = () => delete require.cache[resolved_path]
 				
 				// CommonJS module source code
-				const source = resolver(path, flush_cache)
+				const source = resolver(path)
 				
 				if (typeof source === 'undefined')
 				{
 					return
 				}
 				
+				// const flush_cache = () => delete require.cache[resolved_path]
+				delete require.cache[resolved_path]
+
 				this.abstract_path_resolved_modules[resolved_path] = source
+				
 				return resolved_path
 			}
 		}
@@ -178,6 +182,9 @@ export default class Require_hacker
 			this.log.warning(`-------------------------------------------------------------`)
 		}
 
+		// the list of cached modules
+		const cached_modules = new Set()
+
 		// set new loader for this extension
 		Module._extensions[dot_extension] = (module, filename) =>
 		{
@@ -211,6 +218,9 @@ export default class Require_hacker
 				return
 			}
 
+			// add this file path to the list of cached modules
+			cached_modules.add(filename)
+
 			// compile javascript module from its source
 			// https://github.com/nodejs/node/blob/master/lib/module.js#L379
 			module._compile(source, filename)
@@ -221,6 +231,13 @@ export default class Require_hacker
 			// uninstall the hook
 			unmount: () =>
 			{
+				// clear require() cache for this file extension
+				for (let path of cached_modules)
+				{
+					delete require.cache[path]
+				}
+
+				// mount the original loader for this file extension
 				Module._extensions[dot_extension] = original_loader
 			}
 		}

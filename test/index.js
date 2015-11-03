@@ -50,8 +50,6 @@ describe('require hacker', function()
 		// mount require() hook
 		const hook = require_hacker.resolver('textual', (path, flush_cache) =>
 		{
-			// maybe also test flush_cache() some time
-
 			if (path.indexOf('http://xhamster.com') >= 0)
 			{
 				return `module.exports = "Free porn"`
@@ -76,8 +74,6 @@ describe('require hacker', function()
 		// mount require() hook
 		const hook = require_hacker.resolver('javascript', (path, flush_cache) =>
 		{
-			// maybe also test flush_cache() some time
-
 			if (path.indexOf('/dummy.js') >= 0)
 			{
 				return `module.exports = "Free porn"`

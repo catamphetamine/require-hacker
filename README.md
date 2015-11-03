@@ -142,7 +142,7 @@ Will intercept all `require()` calls for paths with this `file_extension`. Handl
 
 #### .resolver(meaningful_id, resolver, [options])
 
-Will intercept those `require()` calls which failed to be resolved by original Node.js `require()` loader (by default). If you pass `{ precede_node_loader: true }` option then it will precede the original Node.js `require()` loader instead (and then fall back to the original Node.js `require()` loader if `resolver` doesn't return anything). The `resolver` function takes two parameters: the `path` which is `require()`d and the `flush_cache` helper which flushes Node.js `require()` cache for this `path` (all modules `require()`d are by default evaluated only one time and then are cached for the entire process lifetime so that all subsequent `require()` calls for this path will just return the already compiled and cached module). Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
+Will intercept those `require()` calls which failed to be resolved by original Node.js `require()` loader (by default). If you pass `{ precede_node_loader: true }` option then it will precede the original Node.js `require()` loader instead (and then fall back to the original Node.js `require()` loader if `resolver` doesn't return anything). The `resolver` function takes one parameter: the `path` which is `require()`d. Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
 
 ## Gotchas
 

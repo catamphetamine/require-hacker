@@ -75,3 +75,14 @@ export function replace_all(where, what, with_what)
 	const regexp = new RegExp(escape_regexp(what), 'g')
 	return where.replace(regexp, with_what)
 }
+
+export function starts_with(string, substring)
+{
+	return string.indexOf(substring) === 0
+}
+
+export function ends_with(string, substring)
+{
+	const index = string.lastIndexOf(substring)
+	return index >= 0 && index === string.length - substring.length
+}
