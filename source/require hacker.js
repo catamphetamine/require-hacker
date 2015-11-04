@@ -110,7 +110,7 @@ export default class Require_hacker
 				delete require.cache[resolved_path]
 
 				this.abstract_path_resolved_modules[resolved_path] = source
-				
+
 				return resolved_path
 			}
 		}
@@ -177,9 +177,11 @@ export default class Require_hacker
 		// display a warning in case of extension loader override
 		if (original_loader)
 		{
-			this.log.warning(`-------------------------------------------------------------`)
-			this.log.warning(`Overriding require() hook for file extension ${dot_extension}`)
-			this.log.warning(`-------------------------------------------------------------`)
+			const output = extension === 'js' ? this.log.debug : this.log.warning
+			output(`-----------------------------------------------`)
+			output(`Overriding an already existing require() hook `)
+			output(`for file extension ${dot_extension}`)
+			output(`-----------------------------------------------`)
 		}
 
 		// the list of cached modules
