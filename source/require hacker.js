@@ -177,11 +177,12 @@ export default class Require_hacker
 		// display a warning in case of extension loader override
 		if (original_loader)
 		{
-			const output = (extension === 'js' ? this.log.debug : this.log.warning).bind(this.log)
-			output(`-----------------------------------------------`)
-			output(`Overriding an already existing require() hook `)
-			output(`for file extension ${dot_extension}`)
-			output(`-----------------------------------------------`)
+			// output a debug message in case of extension loader override,
+			// not a warning, so that it doesn't scare people
+			this.log.debug(`-----------------------------------------------`)
+			this.log.debug(`Overriding an already existing require() hook `)
+			this.log.debug(`for file extension ${dot_extension}`)
+			this.log.debug(`-----------------------------------------------`)
 		}
 
 		// the list of cached modules
