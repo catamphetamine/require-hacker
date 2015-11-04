@@ -1,3 +1,8 @@
+1.2.1 / 04.11.2015
+==================
+
+  * Less exclamative extension loader override warning in case of .js files
+
 1.2.0 / 03.11.2015
 ==================
 
