@@ -1,4 +1,4 @@
-1.2.1 / 04.11.2015
+1.2.1, 1.2.2 / 04.11.2015
 ==================
 
   * Less exclamative extension loader override warning in case of .js files

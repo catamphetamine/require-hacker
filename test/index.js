@@ -22,6 +22,20 @@ describe('require hacker', function()
 	{
 	})
 
+	it('should hook into js extension loading', function()
+	{
+		const require_hacker = new Require_hacker({ debug: false })
+
+		// mount require() hook
+		const hook = require_hacker.hook('js', (path, fallback) =>
+		{
+			return `module.exports = "${fs.readFileSync(path).toString()}"`
+		})
+
+		// unmount require() hook
+		hook.unmount()
+	})
+
 	it('should hook into file extension loading', function()
 	{
 		const require_hacker = new Require_hacker({ debug: false })
@@ -31,6 +45,15 @@ describe('require hacker', function()
 		{
 			return `module.exports = "${fs.readFileSync(path).toString()}"`
 		})
+
+		// mount overriding require() hook
+		const overriding_hook = require_hacker.hook('txt', (path, fallback) =>
+		{
+			return `module.exports = "whatever"`
+		})
+
+		// unmount overriding require() hook
+		overriding_hook.unmount()
 
 		// will output text file contents
 		require('./test.txt').should.equal('Hot threesome interracial with double penetration')

@@ -177,7 +177,7 @@ export default class Require_hacker
 		// display a warning in case of extension loader override
 		if (original_loader)
 		{
-			const output = extension === 'js' ? this.log.debug : this.log.warning
+			const output = (extension === 'js' ? this.log.debug : this.log.warning).bind(this.log)
 			output(`-----------------------------------------------`)
 			output(`Overriding an already existing require() hook `)
 			output(`for file extension ${dot_extension}`)
