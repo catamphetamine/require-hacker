@@ -114,5 +114,58 @@ describe('require hacker', function()
 		require('./dummy.js').should.equal('Hot lesbians making out')
 		// clear require() cache (just in case)
 		delete require.cache[path.resolve(__dirname, './dummy.js')]
+
+		// mount require() hook
+		const ignoring_hook = require_hacker.resolver('javascript', (path, flush_cache) =>
+		{
+			return
+		},
+		{ precede_node_loader: true })
+
+		// usual Node.js loader takes precedence
+		require('./dummy.js').should.equal('Hot lesbians making out')
+		// clear require() cache (just in case)
+		delete require.cache[path.resolve(__dirname, './dummy.js')]
+		
+		// unmount require() hook
+		ignoring_hook.unmount()
+	})
+
+	it('should validate options', function()
+	{
+		const require_hacker = new Require_hacker({ debug: false })
+
+		// mount require() hook
+		const hook = (id, resolve) => () => require_hacker.resolver(id, resolve)
+
+		hook().should.throw('You must specify resolver id')
+
+		hook('.js').should.throw('Invalid resolver id')
+
+		hook('js').should.throw('Resolve should be a function')
+
+		hook('js', true).should.throw('Resolve should be a function')
+
+		const hook_extension = (extension, handler) => () => require_hacker.hook(extension, handler)
+
+		hook_extension('.js').should.throw('Invalid file extension')
+	})
+
+	it('should fall back', function()
+	{
+		const require_hacker = new Require_hacker({ debug: false })
+
+		// mount require() hook
+		const hook = require_hacker.hook('js', (path, fallback) =>
+		{
+			fallback()
+			return 'whatever'
+		})
+
+		// will output text file contents
+		require('./dummy.js').should.equal('Hot lesbians making out')
+
+		// unmount require() hook
+		hook.unmount()
 	})
 })

@@ -280,10 +280,10 @@ const validate =
 {
 	extension(extension)
 	{
-		if (typeof extension !== 'string')
-		{
-			throw new Error(`Expected string extension. Got ${extension}`)
-		}
+		// if (typeof extension !== 'string')
+		// {
+		// 	throw new Error(`Expected string extension. Got ${extension}`)
+		// }
 
 		if (path.extname(`test.${extension}`) !== `.${extension}`)
 		{
@@ -310,5 +310,7 @@ const validate =
 		{
 			throw new Error(`Invalid resolver id. Expected a valid file extension.`)
 		}
+
+		validate.resolve(resolver)
 	}
 }
