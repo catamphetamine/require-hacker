@@ -3,7 +3,7 @@ import chai from 'chai'
 
 import fs from 'fs'
 
-import Require_hacker from '../source/index'
+import require_hacker from '../source/index'
 
 import Log from '../source/tools/log'
 
@@ -24,10 +24,8 @@ describe('require hacker', function()
 
 	it('should hook into js extension loading', function()
 	{
-		const require_hacker = new Require_hacker({ debug: false })
-
 		// mount require() hook
-		const hook = require_hacker.hook('js', (path, fallback) =>
+		const hook = require_hacker.hook('js', path =>
 		{
 			return `module.exports = "${fs.readFileSync(path).toString()}"`
 		})
@@ -36,24 +34,43 @@ describe('require hacker', function()
 		hook.unmount()
 	})
 
-	it('should hook into file extension loading', function()
+	it('shouldn\'t allow already occupied file extension override', function()
 	{
-		const require_hacker = new Require_hacker({ debug: false })
+		const test_hook = () => require_hacker.hook('test', path => {})
+		const test_global_hook = () => require_hacker.global_hook('test', path => {})
 
 		// mount require() hook
-		const hook = require_hacker.hook('txt', (path, fallback) =>
+		const hook = test_hook()
+
+		// verify that it guards the file extension
+		test_hook.should.throw('occupied')
+
+		// verify that it guards the file extension
+		test_global_hook.should.throw('occupied')
+
+		// unmount require() hook
+		hook.unmount()
+
+		// mount a global require() hook
+		const global_hook = test_global_hook()
+
+		// verify that it guards the file extension
+		test_hook.should.throw('occupied')
+
+		// verify that it guards the file extension
+		test_global_hook.should.throw('occupied')
+
+		// unmount the global require() hook
+		global_hook.unmount()
+	})
+
+	it('should hook into file extension loading', function()
+	{
+		// mount require() hook
+		const hook = require_hacker.hook('txt', path =>
 		{
 			return `module.exports = "${fs.readFileSync(path).toString()}"`
 		})
-
-		// mount overriding require() hook
-		const overriding_hook = require_hacker.hook('txt', (path, fallback) =>
-		{
-			return `module.exports = "whatever"`
-		})
-
-		// unmount overriding require() hook
-		overriding_hook.unmount()
 
 		// will output text file contents
 		require('./test.txt').should.equal('Hot threesome interracial with double penetration')
@@ -68,10 +85,8 @@ describe('require hacker', function()
 
 	it('should hook into arbitrary path loading', function()
 	{
-		const require_hacker = new Require_hacker({ debug: false })
-
 		// mount require() hook
-		const hook = require_hacker.global_hook('textual', (path, flush_cache) =>
+		const hook = require_hacker.global_hook('textual', path =>
 		{
 			if (path.indexOf('http://xhamster.com') >= 0)
 			{
@@ -92,10 +107,8 @@ describe('require hacker', function()
 
 	it('should hook into arbitrary path loading (preceding Node.js original loader)', function()
 	{
-		const require_hacker = new Require_hacker({ debug: false })
-
 		// mount require() hook
-		const hook = require_hacker.global_hook('javascript', (path, flush_cache) =>
+		const hook = require_hacker.global_hook('javascript', path =>
 		{
 			if (path.indexOf('/dummy.js') >= 0)
 			{
@@ -116,7 +129,7 @@ describe('require hacker', function()
 		delete require.cache[path.resolve(__dirname, './dummy.js')]
 
 		// mount require() hook
-		const ignoring_hook = require_hacker.global_hook('javascript', (path, flush_cache) =>
+		const ignoring_hook = require_hacker.global_hook('javascript', path =>
 		{
 			return
 		},
@@ -133,8 +146,6 @@ describe('require hacker', function()
 
 	it('should validate options', function()
 	{
-		const require_hacker = new Require_hacker({ debug: false })
-
 		// mount require() hook
 		const hook = (id, resolve) => () => require_hacker.global_hook(id, resolve)
 
@@ -153,8 +164,6 @@ describe('require hacker', function()
 
 	it('should fall back', function()
 	{
-		const require_hacker = new Require_hacker({ debug: false })
-
 		// mount require() hook
 		const hook = require_hacker.hook('js', path =>
 		{
@@ -170,9 +179,9 @@ describe('require hacker', function()
 
 	it('should convert to javascript module source', function()
 	{
-		Require_hacker.to_javascript_module_source().should.equal('module.exports = undefined')
-		Require_hacker.to_javascript_module_source('a').should.equal('module.exports = "a"')
-		Require_hacker.to_javascript_module_source('module.exports = "a"').should.equal('module.exports = "a"')
-		Require_hacker.to_javascript_module_source({ a: 1 }).should.equal('module.exports = {"a":1}')
+		require_hacker.to_javascript_module_source().should.equal('module.exports = undefined')
+		require_hacker.to_javascript_module_source('a').should.equal('module.exports = "a"')
+		require_hacker.to_javascript_module_source('module.exports = "a"').should.equal('module.exports = "a"')
+		require_hacker.to_javascript_module_source({ a: 1 }).should.equal('module.exports = {"a":1}')
 	})
 })

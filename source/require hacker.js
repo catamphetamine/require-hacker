@@ -14,60 +14,17 @@ import serialize from './tools/serialize-javascript'
 
 const original_findPath = Module._findPath
 
-export default class Require_hacker
+const require_hacker = 
 {
-	preceding_abstract_path_resolvers = []
-	abstract_path_resolvers = []
-	
-	// original_loaders = {}
+	preceding_abstract_path_resolvers: [],
+	abstract_path_resolvers: [],
 
-	abstract_path_resolved_modules = {}
+	abstract_path_resolved_modules: {},
 
-	constructor(options)
-	{
-		// // take the passed in options
-		// this.options = clone(options)
+	occupied_file_extensions: new Set(),
 
-		// logging
-		this.log = new Log('require-hook', { debug: options.debug }) // this.options.debug
-
-		// instrument Module._findPath
-		// https://github.com/nodejs/node/blob/master/lib/module.js#L335-L341
-		Module._findPath = (...parameters) =>
-		{
-			const request = parameters[0]
-			// const paths = parameters[1]
-
-			// preceeding resolvers
-			for (let resolver of this.preceding_abstract_path_resolvers)
-			{
-				const resolved = resolver.resolve(request)
-				if (typeof resolved !== 'undefined')
-				{
-					return resolved
-				}
-			}
-
-			// original Node.js loader
-			const filename = original_findPath.apply(undefined, parameters)
-			if (filename !== false)
-			{
-				return filename
-			}
-
-			// rest resolvers
-			for (let resolver of this.abstract_path_resolvers)
-			{
-				const resolved = resolver.resolve(request)
-				if (typeof resolved !== 'undefined')
-				{
-					return resolved
-				}
-			}
-
-			return false
-		}
-	}
+	// logging
+	log: new Log('require-hook', { debug: false }), // this.options.debug
 
 	// installs a global require() hook for all paths 
 	//
@@ -121,7 +78,7 @@ export default class Require_hacker
 				// const flush_cache = () => delete require.cache[resolved_path]
 				delete require.cache[resolved_path]
 
-				this.abstract_path_resolved_modules[resolved_path] = source
+				require_hacker.abstract_path_resolved_modules[resolved_path] = source
 
 				return resolved_path
 			}
@@ -129,17 +86,17 @@ export default class Require_hacker
 
 		if (options.precede_node_loader)
 		{
-			this.preceding_abstract_path_resolvers.push(resolver_entry)
+			require_hacker.preceding_abstract_path_resolvers.push(resolver_entry)
 		}
 		else
 		{
-			this.abstract_path_resolvers.push(resolver_entry)
+			require_hacker.abstract_path_resolvers.push(resolver_entry)
 		}
 
 		const hook = this.hook(id, path => 
 		{
-			const source = this.abstract_path_resolved_modules[path]
-			delete this.abstract_path_resolved_modules[path]
+			const source = require_hacker.abstract_path_resolved_modules[path]
+			delete require_hacker.abstract_path_resolved_modules[path]
 			return source
 		})
 
@@ -148,14 +105,14 @@ export default class Require_hacker
 			unmount: () =>
 			{
 				// javascript arrays still have no .remove() method in the XXI-st century
-				this.preceding_abstract_path_resolvers = this.preceding_abstract_path_resolvers.filter(x => x !== resolver_entry)
-				this.abstract_path_resolvers = this.abstract_path_resolvers.filter(x => x !== resolver_entry)
+				require_hacker.preceding_abstract_path_resolvers = require_hacker.preceding_abstract_path_resolvers.filter(x => x !== resolver_entry)
+				require_hacker.abstract_path_resolvers = require_hacker.abstract_path_resolvers.filter(x => x !== resolver_entry)
 				hook.unmount()
 			}
 		}
 
 		return result
-	}
+	},
 
 	// installs a require() hook for the extension
 	//
@@ -177,6 +134,9 @@ export default class Require_hacker
 		// validation
 		validate.extension(extension)
 		validate.resolve(resolve)
+
+		// occupy file extension
+		this.occupied_file_extensions.add(extension)
 
 		// dotted extension
 		const dot_extension = `.${extension}`
@@ -242,37 +202,33 @@ export default class Require_hacker
 
 				// mount the original loader for this file extension
 				Module._extensions[dot_extension] = original_loader
+
+				// free file extension
+				this.occupied_file_extensions.delete(extension)
 			}
 		}
 
 		return result
-	}
+	},
 
-	// // uninstalls a previously installed require() hook for the extension
-	// //
-	// // extension - the file extension for which to uninstall 
-	// //             the previously installed require() hook
-	// //
-	// unhook(extension)
-	// {
-	// 	this.log.debug(`Unhooking from .${extension} files loading`)
-	//
-	// 	// validation
-	// 	validate.extension(extension)
-	//
-	// 	// dotted extension
-	// 	const dot_extension = `.${extension}`
-	//
-	// 	// verify that the hook exists in the first place
-	// 	if (Object.keys(this.original_loaders).indexOf(dot_extension) < 0)
-	// 	{
-	// 		throw new Error(`Require() hook wasn't previously installed for ${dot_extension} files`)
-	// 	}
-	//
-	// 	// uninstall the hook
-	// 	Module._extensions[dot_extension] = this.original_loaders[dot_extension]
-	// 	delete this.original_loaders[dot_extension]
-	// }
+	// returns a CommonJS modules source.
+	to_javascript_module_source(anything)
+	{
+		// if the asset source wasn't found - return an empty CommonJS module
+		if (!exists(anything))
+		{
+			return 'module.exports = undefined'
+		}
+
+		// if it's already a common js module source
+		if (typeof anything === 'string' && is_a_module_declaration(anything))
+		{
+			return anything
+		}
+
+		// generate javascript module source code based on the `source` variable
+		return 'module.exports = ' + serialize(anything)
+	}
 }
 
 // validation
@@ -287,7 +243,13 @@ const validate =
 
 		if (path.extname(`test.${extension}`) !== `.${extension}`)
 		{
-			throw new Error(`Invalid file extension ${extension}`)
+			throw new Error(`Invalid file extension "${extension}"`)
+		}
+
+		// check if the file extension is already occupied
+		if (require_hacker.occupied_file_extensions.has(extension))
+		{
+			throw new Error(`File extension "${extension}" is already occupied by require-hacker`)
 		}
 	},
 
@@ -295,7 +257,7 @@ const validate =
 	{
 		if (typeof resolve !== 'function')
 		{
-			throw new Error(`Resolve should be a function. Got ${resolve}`)
+			throw new Error(`Resolve should be a function. Got "${resolve}"`)
 		}
 	},
 
@@ -308,30 +270,54 @@ const validate =
 
 		if (path.extname(`test.${id}`) !== `.${id}`)
 		{
-			throw new Error(`Invalid global hook id. Expected a valid file extension.`)
+			throw new Error(`Invalid global hook id "${id}". Expected a valid file extension.`)
+		}
+
+		// check if the file extension is already occupied
+		if (require_hacker.occupied_file_extensions.has(id))
+		{
+			throw new Error(`File extension "${id}" is already occupied by require-hacker`)
 		}
 
 		validate.resolve(resolver)
 	}
 }
 
-// returns a CommonJS modules source.
-Require_hacker.to_javascript_module_source = function(anything)
+// instrument Module._findPath
+// https://github.com/nodejs/node/blob/master/lib/module.js#L335-L341
+Module._findPath = (...parameters) =>
 {
-	// if the asset source wasn't found - return an empty CommonJS module
-	if (!exists(anything))
+	const request = parameters[0]
+	// const paths = parameters[1]
+
+	// preceeding resolvers
+	for (let resolver of require_hacker.preceding_abstract_path_resolvers)
 	{
-		return 'module.exports = undefined'
+		const resolved = resolver.resolve(request)
+		if (typeof resolved !== 'undefined')
+		{
+			return resolved
+		}
 	}
 
-	// if it's already a common js module source
-	if (typeof anything === 'string' && is_a_module_declaration(anything))
+	// original Node.js loader
+	const filename = original_findPath.apply(undefined, parameters)
+	if (filename !== false)
 	{
-		return anything
+		return filename
 	}
 
-	// generate javascript module source code based on the `source` variable
-	return 'module.exports = ' + serialize(anything)
+	// rest resolvers
+	for (let resolver of require_hacker.abstract_path_resolvers)
+	{
+		const resolved = resolver.resolve(request)
+		if (typeof resolved !== 'undefined')
+		{
+			return resolved
+		}
+	}
+
+	return false
 }
 
 // detect if it is a CommonJS module declaration
@@ -340,3 +326,5 @@ function is_a_module_declaration(text)
 	return text.indexOf('module.exports = ') === 0 ||
 		/\s+module\.exports = .+/.test(text)
 }
+
+export default require_hacker

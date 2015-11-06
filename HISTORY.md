@@ -1,7 +1,8 @@
-2.0.0, 2.0.1 / 06.11.2015
+2.0.0, 2.0.1, 2.0.2 / 06.11.2015
 ==================
 
   * Some API changes: renamed `.resolver()` to `.global_hook()`, added a static `.to_javascript_module_source()` function
+  * All methods are now static and it's no more a class
 
 1.2.1, 1.2.2, 1.2.3 / 04.11.2015
 ==================

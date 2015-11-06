@@ -41,10 +41,8 @@ $ npm install require-hacker --save
 Something basic
 
 ```javascript
-import Require_hacker from 'require-hacker'
+import require_hacker from 'require-hacker'
 import fs from 'fs'
-
-const require_hacker = new Require_hacker({ debug: false })
 
 // mount require() hook
 const hook = require_hacker.hook('txt', path =>
@@ -124,21 +122,13 @@ And don't ask me what for.
 
 ## Configuration
 
-Available configuration parameters:
+To see debug logs in the console one can use this code
 
 ```javascript
-{
-  // debug mode.
-  // when set to true, lets you see debugging messages in the console.
-  debug: true // is false by default
-}
+require_hacker.log.options.debug = true
 ```
 
 ## API
-
-#### Constructor
-
-Takes an object with options (see [Configuration](#configuration) section above)
 
 #### .hook(file_extension, resolve)
 
@@ -163,7 +153,7 @@ The `resolve` function takes one parameter: the `path` which is `require()`d.
 
 The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
 
-#### (static) .to_javascript_module_source(anything)
+#### .to_javascript_module_source(anything)
 
 Converts anyting (an undefined, a string, a JSON object, a function, a regular expression - anything) to a valid CommonJS javascript module source code.
 
@@ -215,10 +205,10 @@ whenever you save a js file.
 When you're ready to test your new functionality on a real project, you can run
 
 ```sh
-npm run tryout
+npm pack
 ```
 
-It will `build`, `test` and then create a `.tar.gz` archive which you can then install in your project folder
+It will `build`, `test` and then create a `.tgz` archive which you can then install in your project folder
 
 ```sh
 npm install [module name with version].tar.gz
