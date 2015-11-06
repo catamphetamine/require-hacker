@@ -161,7 +161,7 @@ Returns an object with `.unmount()` method which unmounts this `require()` hook 
 
 The `resolve` function takes one parameter: the `path` which is `require()`d.
 
-The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this resolver.
+The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
 
 #### (static) .to_javascript_module_source(anything)
 
