@@ -156,10 +156,9 @@ describe('require hacker', function()
 		const require_hacker = new Require_hacker({ debug: false })
 
 		// mount require() hook
-		const hook = require_hacker.hook('js', (path, fallback) =>
+		const hook = require_hacker.hook('js', path =>
 		{
-			fallback()
-			return 'whatever'
+			return
 		})
 
 		// will output text file contents

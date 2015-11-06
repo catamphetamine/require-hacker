@@ -69,25 +69,35 @@ export default class Require_hacker
 		}
 	}
 
-	// installs a require() hook for paths 
-	// which don't exist in the filesystem
+	// installs a global require() hook for all paths 
 	//
-	// (if these paths exist in the filesystem
+	// (if these paths are certain to exist in the filesystem
+	//  and if you need only a specific file extension
 	//  then use the .hook(extension, resolve) method instead)
 	//
 	// id - a meaningful textual identifier
 	//
-	// resolver - a function which takes two parameters:
+	// resolve - a function which takes one parameter:
 	//
-	//              the path to be resolved
+	//             the path to be resolved
 	//
-	//              a function which flushes require() cache for this path
-	//              with no parameters
-	//
-	//            must return a javascript CommonJS module source code
-	//            (i.e. "module.exports = ...", etc)
+	//           must return either a javascript CommonJS module source code
+	//           (i.e. "module.exports = ...", etc)
+	//           or it can return nothing to fall back to the original Node.js loader
 	//
 	// returns an object with an .undo() method
+	//
+	// options:
+	//
+	//   precede_node_loader:
+	//     
+	//     true  - this require() hook will intercept all require() calls
+	//             before they go into the original Node.js loader
+	//    
+	//     false - this require() hook will only intercept those require() calls
+	//             which failed to be resolved by the original Node.js loader
+	//
+	//     default value: false
 	//
 	global_hook(id, resolver, options = {})
 	{
@@ -152,15 +162,13 @@ export default class Require_hacker
 	// extension - a file extension to hook into require()s of
 	//             (examples: 'css', 'jpg', 'js')
 	//
-	// resolve   - a function that takes two parameters: 
+	// resolve   - a function that takes one parameter: 
 	//
 	//               the path requested in the require() call 
 	//
-	//               and a fallback function (fall back to default behaviour)
-	//               with no parameters
-	//
-	//             must return a javascript CommonJS module source code
+	//             must return either a javascript CommonJS module source code
 	//             (i.e. "module.exports = ...", etc)
+	//             or it can return nothing to fall back to the original Node.js loader
 	//
 	hook(extension, resolve)
 	{
@@ -195,16 +203,12 @@ export default class Require_hacker
 		{
 			this.log.debug(`Loading source code for ${filename}`)
 
-			// fallback flag
-			let aborted = false
-
 			// var source = fs.readFileSync(filename, 'utf8')
-			const source = resolve(filename, () =>
+			const source = resolve(filename)
+
+			if (!exists(source))
 			{
 				this.log.debug(`Fallback to original loader`)
-
-				// fallen back
-				aborted = true
 
 				// this message would appear if there was no loader 
 				// for the extension of the filename
@@ -214,13 +218,7 @@ export default class Require_hacker
 				}
 
 				// load the file with the original loader
-				(original_loader || Module._extensions['.js'])(module, filename)
-			})
-
-			// if fallen back - exit
-			if (aborted)
-			{
-				return
+				return (original_loader || Module._extensions['.js'])(module, filename)
 			}
 
 			// add this file path to the list of cached modules
