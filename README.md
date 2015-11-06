@@ -144,8 +144,8 @@ The `resolve` function must return either a valid CommonJS javascript module sou
 
 Can intercept all `require()` calls. The behaviour is controlled by `precede_node_loader` option:
 
-  * when it's `false` (default) it will intercept only those `require()` calls which failed to be resolved by the original Node.js `require()` loader
-  * when it's `true` it will intercept all `require()` calls before they are passed to the original Node.js `require()` loader
+  * when it's `true` (default) it will intercept all `require()` calls before they are passed to the original Node.js `require()` loader
+  * when it's `false` it will intercept only those `require()` calls which failed to be resolved by the original Node.js `require()` loader
 
 Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
 

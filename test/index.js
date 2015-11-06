@@ -114,8 +114,7 @@ describe('require hacker', function()
 			{
 				return `module.exports = "Free porn"`
 			}
-		},
-		{ precede_node_loader: true })
+		})
 
 		// will output text file contents
 		require('./dummy.js').should.equal('Free porn')
@@ -132,8 +131,7 @@ describe('require hacker', function()
 		const ignoring_hook = require_hacker.global_hook('javascript', path =>
 		{
 			return
-		},
-		{ precede_node_loader: true })
+		})
 
 		// usual Node.js loader takes precedence
 		require('./dummy.js').should.equal('Hot lesbians making out')

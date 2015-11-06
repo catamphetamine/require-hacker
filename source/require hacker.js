@@ -16,10 +16,10 @@ const original_findPath = Module._findPath
 
 const require_hacker = 
 {
-	preceding_abstract_path_resolvers: [],
-	abstract_path_resolvers: [],
+	preceding_path_resolvers: [],
+	path_resolvers: [],
 
-	abstract_path_resolved_modules: {},
+	global_hook_resolved_modules: {},
 
 	occupied_file_extensions: new Set(),
 
@@ -54,7 +54,7 @@ const require_hacker =
 	//     false - this require() hook will only intercept those require() calls
 	//             which failed to be resolved by the original Node.js loader
 	//
-	//     default value: false
+	//     default value: true
 	//
 	global_hook(id, resolver, options = {})
 	{
@@ -78,25 +78,25 @@ const require_hacker =
 				// const flush_cache = () => delete require.cache[resolved_path]
 				delete require.cache[resolved_path]
 
-				require_hacker.abstract_path_resolved_modules[resolved_path] = source
+				require_hacker.global_hook_resolved_modules[resolved_path] = source
 
 				return resolved_path
 			}
 		}
 
-		if (options.precede_node_loader)
+		if (options.precede_node_loader === false)
 		{
-			require_hacker.preceding_abstract_path_resolvers.push(resolver_entry)
+			require_hacker.path_resolvers.push(resolver_entry)
 		}
 		else
 		{
-			require_hacker.abstract_path_resolvers.push(resolver_entry)
+			require_hacker.preceding_path_resolvers.push(resolver_entry)
 		}
 
 		const hook = this.hook(id, path => 
 		{
-			const source = require_hacker.abstract_path_resolved_modules[path]
-			delete require_hacker.abstract_path_resolved_modules[path]
+			const source = require_hacker.global_hook_resolved_modules[path]
+			delete require_hacker.global_hook_resolved_modules[path]
 			return source
 		})
 
@@ -105,8 +105,8 @@ const require_hacker =
 			unmount: () =>
 			{
 				// javascript arrays still have no .remove() method in the XXI-st century
-				require_hacker.preceding_abstract_path_resolvers = require_hacker.preceding_abstract_path_resolvers.filter(x => x !== resolver_entry)
-				require_hacker.abstract_path_resolvers = require_hacker.abstract_path_resolvers.filter(x => x !== resolver_entry)
+				require_hacker.preceding_path_resolvers = require_hacker.preceding_path_resolvers.filter(x => x !== resolver_entry)
+				require_hacker.path_resolvers = require_hacker.path_resolvers.filter(x => x !== resolver_entry)
 				hook.unmount()
 			}
 		}
@@ -291,7 +291,7 @@ Module._findPath = (...parameters) =>
 	// const paths = parameters[1]
 
 	// preceeding resolvers
-	for (let resolver of require_hacker.preceding_abstract_path_resolvers)
+	for (let resolver of require_hacker.preceding_path_resolvers)
 	{
 		const resolved = resolver.resolve(request)
 		if (typeof resolved !== 'undefined')
@@ -308,7 +308,7 @@ Module._findPath = (...parameters) =>
 	}
 
 	// rest resolvers
-	for (let resolver of require_hacker.abstract_path_resolvers)
+	for (let resolver of require_hacker.path_resolvers)
 	{
 		const resolved = resolver.resolve(request)
 		if (typeof resolved !== 'undefined')
