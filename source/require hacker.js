@@ -8,7 +8,9 @@ import path   from 'path'
 import Module from 'module'
 
 import Log from './tools/log'
-import { ends_with } from './helpers'
+import { exists, ends_with } from './helpers'
+
+import serialize from './tools/serialize-javascript'
 
 const original_findPath = Module._findPath
 
@@ -87,9 +89,9 @@ export default class Require_hacker
 	//
 	// returns an object with an .undo() method
 	//
-	resolver(id, resolver, options = {})
+	global_hook(id, resolver, options = {})
 	{
-		validate.resolver(id, resolver)
+		validate.global_hook(id, resolver)
 
 		const resolver_entry = 
 		{
@@ -101,7 +103,7 @@ export default class Require_hacker
 				// CommonJS module source code
 				const source = resolver(path)
 				
-				if (typeof source === 'undefined')
+				if (!exists(source))
 				{
 					return
 				}
@@ -299,18 +301,44 @@ const validate =
 		}
 	},
 
-	resolver(id, resolver)
+	global_hook(id, resolver)
 	{
 		if (!id)
 		{
-			throw new Error(`You must specify resolver id`)
+			throw new Error(`You must specify global hook id`)
 		}
 
 		if (path.extname(`test.${id}`) !== `.${id}`)
 		{
-			throw new Error(`Invalid resolver id. Expected a valid file extension.`)
+			throw new Error(`Invalid global hook id. Expected a valid file extension.`)
 		}
 
 		validate.resolve(resolver)
 	}
+}
+
+// returns a CommonJS modules source.
+Require_hacker.to_javascript_module_source = function(anything)
+{
+	// if the asset source wasn't found - return an empty CommonJS module
+	if (!exists(anything))
+	{
+		return 'module.exports = undefined'
+	}
+
+	// if it's already a common js module source
+	if (typeof anything === 'string' && is_a_module_declaration(anything))
+	{
+		return anything
+	}
+
+	// generate javascript module source code based on the `source` variable
+	return 'module.exports = ' + serialize(anything)
+}
+
+// detect if it is a CommonJS module declaration
+function is_a_module_declaration(text)
+{
+	return text.indexOf('module.exports = ') === 0 ||
+		/\s+module\.exports = .+/.test(text)
 }

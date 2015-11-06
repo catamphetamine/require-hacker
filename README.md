@@ -47,7 +47,7 @@ import fs from 'fs'
 const require_hacker = new Require_hacker({ debug: false })
 
 // mount require() hook
-const hook = require_hacker.hook('txt', (path, fallback) =>
+const hook = require_hacker.hook('txt', path =>
 {
   return `module.exports = "${fs.readFileSync(path).replace(/"/g, '\"')}"`
 })
@@ -65,24 +65,26 @@ require('./test without hook.txt')
 Something unusual
 
 ```javascript
-const hook = require_hacker.resolver('network', path =>
+const hook = require_hacker.global_hook('network', path =>
 {
-  if (path.starts_with('http://xhamster.com'))
+  if (!path.starts_with('http://xhamster.com'))
   {
-    // returns javascript module source code, something like:
-    //
-    // "module.exports =
-    //  {
-    //    category   : 'redhead',
-    //    videos     : [12345, 12346, 12347],
-    //    unsubscribe: function()
-    //    {
-    //      http.post('http://xhamster.com/unsubscribe', { user: 123 })
-    //    }
-    //  }"
-    //
-    return synchronous_http.get(path)
+    return
   }
+
+  // returns javascript module source code, something like:
+  //
+  // "module.exports =
+  //  {
+  //    category   : 'redhead',
+  //    videos     : [12345, 12346, 12347],
+  //    unsubscribe: function()
+  //    {
+  //      http.post('http://xhamster.com/unsubscribe', { user: 123 })
+  //    }
+  //  }"
+  //
+  return synchronous_http.get(path)
 })
 
 const readheads = require('http://xhamster.com/category/redhead')
@@ -92,24 +94,26 @@ readheads.unsubscribe()
 Or
 
 ```javascript
-const hook = require_hacker.resolver('database', path =>
+const hook = require_hacker.global_hook('database', path =>
 {
-  if (path.starts_with('postgresql://'))
+  if (!path.starts_with('postgresql://'))
   {
-    // returns javascript module source code, something like:
-    //
-    // "module.exports =
-    //  {
-    //    words: ['a', 'b', 'c']
-    //    sum: function()
-    //    {
-    //      return words.join('')
-    //    }
-    //  }"
-    //
-    const schema = path.substring(0, 'postgresql://'.length)
-    return pg.sql(`select * from ${schema}.generate_javascript()`)
+    return
   }
+
+  // returns javascript module source code, something like:
+  //
+  // "module.exports =
+  //  {
+  //    words: ['a', 'b', 'c']
+  //    sum: function()
+  //    {
+  //      return words.join('')
+  //    }
+  //  }"
+  //
+  const schema = path.substring(0, 'postgresql://'.length)
+  return pg.sql(`select * from ${schema}.generate_javascript()`)
 })
 
 const summator = require('postgresql://summator')
@@ -136,13 +140,32 @@ Available configuration parameters:
 
 Takes an object with options (see [Configuration](#configuration) section above)
 
-#### .hook(file_extension, handler)
+#### .hook(file_extension, resolve)
 
-Will intercept all `require()` calls for paths with this `file_extension`. Handler takes two parameters: the `path` which is `require()`d and the `fallback` function which falls back to normal `require()` behaviour for this `require()` call. Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
+Will intercept all `require()` calls for paths with this `file_extension` and reroute them to the `resolve` function.
 
-#### .resolver(meaningful_id, resolver, [options])
+Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
 
-Will intercept those `require()` calls which failed to be resolved by original Node.js `require()` loader (by default). If you pass `{ precede_node_loader: true }` option then it will precede the original Node.js `require()` loader instead (and then fall back to the original Node.js `require()` loader if `resolver` doesn't return anything). The `resolver` function takes one parameter: the `path` which is `require()`d. Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
+The `resolve` function takes one parameter: the `path` which is `require()`d.
+
+The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
+
+#### .global_hook(meaningful_id, resolve, [options])
+
+Can intercept all `require()` calls. The behaviour is controlled by `precede_node_loader` option:
+
+  * when it's `false` (default) it will intercept only those `require()` calls which failed to be resolved by the original Node.js `require()` loader
+  * when it's `true` it will intercept all `require()` calls before they are passed to the original Node.js `require()` loader
+
+Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
+
+The `resolve` function takes one parameter: the `path` which is `require()`d.
+
+The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this resolver.
+
+#### (static) .to_javascript_module_source(anything)
+
+Converts anyting (an undefined, a string, a JSON object, a function, a regular expression - anything) to a valid CommonJS javascript module source code.
 
 ## Gotchas
 
@@ -180,7 +203,7 @@ After developing, the full test suite can be evaluated by running:
 npm test
 ```
 
-While actively developing, one can use
+While actively developing, one can use (personally I don't use it)
 
 ```sh
 npm run watch
@@ -188,6 +211,18 @@ npm run watch
 
 in a terminal. This will watch the file system and run tests automatically 
 whenever you save a js file.
+
+When you're ready to test your new functionality on a real project, you can run
+
+```sh
+npm run tryout
+```
+
+It will `build`, `test` and then create a `.tar.gz` archive which you can then install in your project folder
+
+```sh
+npm install [module name with version].tar.gz
+```
 
 ## License
 

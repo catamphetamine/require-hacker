@@ -71,7 +71,7 @@ describe('require hacker', function()
 		const require_hacker = new Require_hacker({ debug: false })
 
 		// mount require() hook
-		const hook = require_hacker.resolver('textual', (path, flush_cache) =>
+		const hook = require_hacker.global_hook('textual', (path, flush_cache) =>
 		{
 			if (path.indexOf('http://xhamster.com') >= 0)
 			{
@@ -95,7 +95,7 @@ describe('require hacker', function()
 		const require_hacker = new Require_hacker({ debug: false })
 
 		// mount require() hook
-		const hook = require_hacker.resolver('javascript', (path, flush_cache) =>
+		const hook = require_hacker.global_hook('javascript', (path, flush_cache) =>
 		{
 			if (path.indexOf('/dummy.js') >= 0)
 			{
@@ -116,7 +116,7 @@ describe('require hacker', function()
 		delete require.cache[path.resolve(__dirname, './dummy.js')]
 
 		// mount require() hook
-		const ignoring_hook = require_hacker.resolver('javascript', (path, flush_cache) =>
+		const ignoring_hook = require_hacker.global_hook('javascript', (path, flush_cache) =>
 		{
 			return
 		},
@@ -136,11 +136,11 @@ describe('require hacker', function()
 		const require_hacker = new Require_hacker({ debug: false })
 
 		// mount require() hook
-		const hook = (id, resolve) => () => require_hacker.resolver(id, resolve)
+		const hook = (id, resolve) => () => require_hacker.global_hook(id, resolve)
 
-		hook().should.throw('You must specify resolver id')
+		hook().should.throw('You must specify global hook id')
 
-		hook('.js').should.throw('Invalid resolver id')
+		hook('.js').should.throw('Invalid global hook id')
 
 		hook('js').should.throw('Resolve should be a function')
 
@@ -167,5 +167,13 @@ describe('require hacker', function()
 
 		// unmount require() hook
 		hook.unmount()
+	})
+
+	it('should convert to javascript module source', function()
+	{
+		Require_hacker.to_javascript_module_source().should.equal('module.exports = undefined')
+		Require_hacker.to_javascript_module_source('a').should.equal('module.exports = "a"')
+		Require_hacker.to_javascript_module_source('module.exports = "a"').should.equal('module.exports = "a"')
+		Require_hacker.to_javascript_module_source({ a: 1 }).should.equal('module.exports = {"a":1}')
 	})
 })

@@ -1,6 +1,15 @@
 // // if the variable is defined
 export const exists = what => typeof what !== 'undefined'
 
+// used for JSON object type checking
+const object_constructor = {}.constructor
+
+// detects a JSON object
+export function is_object(object)
+{
+	return exists(object) && (object !== null) && object.constructor === object_constructor
+}
+
 // extends the first object with 
 /* istanbul ignore next: some weird transpiled code, not testable */
 export function extend(...objects)
@@ -17,9 +26,14 @@ export function extend(...objects)
 
 	for (let key of Object.keys(from))
 	{
-		if (typeof from[key] === 'object' && exists(to[key]))
+		if (is_object(from[key]))
 		{
-			to[key] = extend(to[key], from[key])
+			if (!is_object(to[key]))
+			{
+				to[key] = {}
+			}
+
+			extend(to[key], from[key])
 		}
 		else
 		{
@@ -43,20 +57,33 @@ export function clone(object)
 }
 
 // creates camelCased aliases for all the keys of an object
-export function alias_camel_case(object)
+export function convert_from_camel_case(object)
 {
 	for (let key of Object.keys(object))
 	{
-		if (key.indexOf('_') >= 0)
+		if (/[A-Z]/.test(key))
+		// if (key.indexOf('_') >= 0)
 		{
-			const camel_cased_key = key.replace(/_(.)/g, function(match, group_1)
+			// const camel_cased_key = key.replace(/_(.)/g, function(match, group_1)
+			// {
+			// 	return group_1.toUpperCase()
+			// })
+
+			// if (!exists(object[camel_cased_key]))
+			// {
+			// 	object[camel_cased_key] = object[key]
+			// 	delete object[key]
+			// }
+
+			const lo_dashed_key = key.replace(/([A-Z])/g, function(match, group_1)
 			{
-				return group_1.toUpperCase()
+				return '_' + group_1.toLowerCase()
 			})
 
-			if (!exists(object[camel_cased_key]))
+			if (!exists(object[lo_dashed_key]))
 			{
-				object[camel_cased_key] = object[key]
+				object[lo_dashed_key] = object[key]
+				delete object[key]
 			}
 		}
 	}
