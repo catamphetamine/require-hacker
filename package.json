@@ -45,7 +45,8 @@
     "commit-new-build": "git commit --all --message=\"Update build\"",
     "tryout": "npm-run-all test build pack",
     "pack": "npm pack",
-    "watch": "babel scripts/watch.js | node"
+    "watch": "babel scripts/watch.js | node",
+    "prepublish": "npm-run-all test build"
   },
   "repository": {
     "type": "git",
