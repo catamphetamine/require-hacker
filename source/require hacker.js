@@ -12,8 +12,6 @@ import { exists, ends_with } from './helpers'
 
 import serialize from './tools/serialize-javascript'
 
-const original_findPath = Module._findPath
-
 const require_hacker = 
 {
 	preceding_path_resolvers: [],
@@ -34,9 +32,10 @@ const require_hacker =
 	//
 	// id - a meaningful textual identifier
 	//
-	// resolve - a function which takes one parameter:
+	// resolve - a function which takes two parameters:
 	//
 	//             the path to be resolved
+	//             the module in which the require() call was originated
 	//
 	//           must return either a javascript CommonJS module source code
 	//           (i.e. "module.exports = ...", etc)
@@ -63,12 +62,12 @@ const require_hacker =
 		const resolver_entry = 
 		{
 			id,
-			resolve: path =>
+			resolve: (path, module) =>
 			{
 				const resolved_path = `${path}.${id}`
 				
 				// CommonJS module source code
-				const source = resolver(path)
+				const source = resolver(path, module)
 				
 				if (!exists(source))
 				{
@@ -119,9 +118,10 @@ const require_hacker =
 	// extension - a file extension to hook into require()s of
 	//             (examples: 'css', 'jpg', 'js')
 	//
-	// resolve   - a function that takes one parameter: 
+	// resolve   - a function that takes two parameters: 
 	//
 	//               the path requested in the require() call 
+	//               the module in which the require() call was originated
 	//
 	//             must return either a javascript CommonJS module source code
 	//             (i.e. "module.exports = ...", etc)
@@ -158,13 +158,20 @@ const require_hacker =
 		// the list of cached modules
 		const cached_modules = new Set()
 
+		// Node.js inner API check
+		/* istanbul ignore if */
+		if (!Module._extensions)
+		{
+			throw new Error('Incompatilbe Node.js version detected: "Module._extensions" array is missing. File an issue on GitHub.')
+		}
+
 		// set new loader for this extension
 		Module._extensions[dot_extension] = (module, filename) =>
 		{
 			this.log.debug(`Loading source code for ${filename}`)
 
 			// var source = fs.readFileSync(filename, 'utf8')
-			const source = resolve(filename)
+			const source = resolve(filename, module)
 
 			if (!exists(source))
 			{
@@ -183,6 +190,13 @@ const require_hacker =
 
 			// add this file path to the list of cached modules
 			cached_modules.add(filename)
+
+			// Node.js inner API check
+			/* istanbul ignore if */
+			if (!module._compile)
+			{
+				throw new Error('Incompatilbe Node.js version detected: "Module.prototype._compile" function is missing. File an issue on GitHub.')
+			}
 
 			// compile javascript module from its source
 			// https://github.com/nodejs/node/blob/master/lib/module.js#L379
@@ -228,6 +242,14 @@ const require_hacker =
 
 		// generate javascript module source code based on the `source` variable
 		return 'module.exports = ' + serialize(anything)
+	},
+
+	// resolves a requireable `path` to a real filesystem path relative to the `module`
+	// (resolves `npm link`, etc)
+	resolve(path, module)
+	{
+		// Module._resolveFilename existence check is perfomed outside of this method
+		return Module._resolveFilename(path, module)
 	}
 }
 
@@ -283,8 +305,47 @@ const validate =
 	}
 }
 
+// Node.js inner API check
+/* istanbul ignore if */
+if (!Module._resolveFilename)
+{
+	throw new Error('Incompatilbe Node.js version detected: "Module._resolveFilename" function is missing. File an issue on GitHub.')
+}
+
+// Node.js inner API check
+/* istanbul ignore if */
+if (!Module._findPath)
+{
+	throw new Error('Incompatilbe Node.js version detected: "Module._findPath" function is missing. File an issue on GitHub.')
+}
+
+// the module in which the require() call originated
+let require_caller
+
+// instrument Module._resolveFilename
+// https://github.com/nodejs/node/blob/master/lib/module.js#L322
+//
+// `arguments` would conflict with Babel, therefore `...parameters`
+//
+// const native_module = require('native_module')
+const original_resolveFilename = Module._resolveFilename
+Module._resolveFilename = function(...parameters)
+{
+	const request = parameters[0]
+	const parent = parameters[1]
+
+	// take note of the require() caller
+	require_caller = parent
+
+	return original_resolveFilename.apply(this, parameters)
+}
+
 // instrument Module._findPath
 // https://github.com/nodejs/node/blob/master/lib/module.js#L335-L341
+//
+// `arguments` would conflict with Babel, therefore `...parameters`
+//
+const original_findPath = Module._findPath
 Module._findPath = (...parameters) =>
 {
 	const request = parameters[0]
@@ -293,8 +354,8 @@ Module._findPath = (...parameters) =>
 	// preceeding resolvers
 	for (let resolver of require_hacker.preceding_path_resolvers)
 	{
-		const resolved = resolver.resolve(request)
-		if (typeof resolved !== 'undefined')
+		const resolved = resolver.resolve(request, require_caller)
+		if (exists(resolved))
 		{
 			return resolved
 		}
@@ -310,8 +371,8 @@ Module._findPath = (...parameters) =>
 	// rest resolvers
 	for (let resolver of require_hacker.path_resolvers)
 	{
-		const resolved = resolver.resolve(request)
-		if (typeof resolved !== 'undefined')
+		const resolved = resolver.resolve(request, require_caller)
+		if (exists(resolved))
 		{
 			return resolved
 		}

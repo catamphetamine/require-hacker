@@ -136,7 +136,10 @@ Will intercept all `require()` calls for paths with this `file_extension` and re
 
 Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
 
-The `resolve` function takes one parameter: the `path` which is `require()`d.
+The `resolve` function takes two parameters:
+
+  * the `path` which is `require()`d.
+  * the `module` in which the `require()` call was originated
 
 The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
 
@@ -149,13 +152,20 @@ Can intercept all `require()` calls. The behaviour is controlled by `precede_nod
 
 Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
 
-The `resolve` function takes one parameter: the `path` which is `require()`d.
+The `resolve` function takes two parameters:
+
+  * the `path` which is `require()`d.
+  * the `module` in which the `require()` call was originated
 
 The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
 
 #### .to_javascript_module_source(anything)
 
 Converts anyting (an undefined, a string, a JSON object, a function, a regular expression - anything) to a valid CommonJS javascript module source code.
+
+#### .resolve(path, module)
+
+Resolves a requireable `path` to a real filesystem path relative to the `module` (resolves `npm link`, global `node_modules`, etc), just an alias to a native Node.js function.
 
 ## Gotchas
 

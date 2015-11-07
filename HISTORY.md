@@ -1,7 +1,9 @@
-2.0.3 / 07.11.2015
+2.0.3, 2.1.0 / 07.11.2015
 ==================
 
   * "precede_node_loader" option is now true by default
+  * added "module" parameter to resolving functions
+  * added "resolve" method
 
 2.0.0, 2.0.1, 2.0.2 / 06.11.2015
 ==================
