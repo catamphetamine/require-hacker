@@ -182,4 +182,12 @@ describe('require hacker', function()
 		require_hacker.to_javascript_module_source('module.exports = "a"').should.equal('module.exports = "a"')
 		require_hacker.to_javascript_module_source({ a: 1 }).should.equal('module.exports = {"a":1}')
 	})
+
+	it('should resolve paths', function()
+	{
+		require_hacker.resolve('/absolute', module).should.equal('/absolute')
+		require_hacker.resolve('./some file.txt', module).should.equal(path.resolve(__dirname, 'some file.txt'))
+		require_hacker.resolve('../some file.txt', module).should.equal(path.resolve(__dirname, '../some file.txt'))
+		require_hacker.resolve('babel-runtime/core-js', module).should.equal(path.resolve(__dirname, '../node_modules/babel-runtime/core-js.js'))
+	})
 })

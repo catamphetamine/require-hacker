@@ -8,7 +8,7 @@ import path   from 'path'
 import Module from 'module'
 
 import Log from './tools/log'
-import { exists, ends_with } from './helpers'
+import { exists, starts_with, ends_with } from './helpers'
 
 import serialize from './tools/serialize-javascript'
 
@@ -18,6 +18,8 @@ const require_hacker =
 	path_resolvers: [],
 
 	global_hook_resolved_modules: {},
+
+	global_hooks_enabled: true,
 
 	occupied_file_extensions: new Set(),
 
@@ -246,10 +248,35 @@ const require_hacker =
 
 	// resolves a requireable `path` to a real filesystem path relative to the `module`
 	// (resolves `npm link`, etc)
-	resolve(path, module)
+	resolve(path_to_resolve, module)
 	{
+		// https://nodejs.org/api/modules.html#modules_file_modules
+
+		// if it's an absolute path then return it
+		if (starts_with(path_to_resolve, '/'))
+		{
+			return path_to_resolve
+		}
+
+		// if it's a relative path then simply resolve it against module.filename
+		if (path_to_resolve === '.' 
+			|| path_to_resolve === '..' 
+			|| starts_with(path_to_resolve, './') 
+			|| starts_with(path_to_resolve, '../'))
+		{
+			return path.resolve(path.dirname(module.filename), path_to_resolve)
+		}
+
 		// Module._resolveFilename existence check is perfomed outside of this method
-		return Module._resolveFilename(path, module)
+		try
+		{
+			require_hacker.global_hooks_enabled = false
+			return Module._resolveFilename(path_to_resolve, module)
+		}
+		finally
+		{
+			require_hacker.global_hooks_enabled = true
+		}
 	}
 }
 
@@ -352,12 +379,15 @@ Module._findPath = (...parameters) =>
 	// const paths = parameters[1]
 
 	// preceeding resolvers
-	for (let resolver of require_hacker.preceding_path_resolvers)
+	if (require_hacker.global_hooks_enabled)
 	{
-		const resolved = resolver.resolve(request, require_caller)
-		if (exists(resolved))
+		for (let resolver of require_hacker.preceding_path_resolvers)
 		{
-			return resolved
+			const resolved = resolver.resolve(request, require_caller)
+			if (exists(resolved))
+			{
+				return resolved
+			}
 		}
 	}
 
@@ -369,12 +399,15 @@ Module._findPath = (...parameters) =>
 	}
 
 	// rest resolvers
-	for (let resolver of require_hacker.path_resolvers)
+	if (require_hacker.global_hooks_enabled)
 	{
-		const resolved = resolver.resolve(request, require_caller)
-		if (exists(resolved))
+		for (let resolver of require_hacker.path_resolvers)
 		{
-			return resolved
+			const resolved = resolver.resolve(request, require_caller)
+			if (exists(resolved))
+			{
+				return resolved
+			}
 		}
 	}
 
