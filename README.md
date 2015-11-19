@@ -138,8 +138,8 @@ Returns an object with `.unmount()` method which unmounts this `require()` hook 
 
 The `resolve` function takes two parameters:
 
-  * the `path` which is `require()`d.
-  * the `module` in which the `require()` call was originated
+  * the `path` which is `require()`d
+  * the `module` in which the `require()` call originated (this `module` parameter can be used for `require_hacker.resolve(path, module)` function call)
 
 The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
 
