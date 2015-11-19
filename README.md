@@ -132,7 +132,7 @@ require_hacker.log.options.debug = true
 
 #### .hook(file_extension, resolve)
 
-Will intercept all `require()` calls for paths with this `file_extension` and reroute them to the `resolve` function.
+Will intercept all `require()` calls for paths with this `file_extension` and reroute them to the `resolve` function. The `require()`d path must exist in the filesystem, otherwise an exception will be thrown: `Cannot find module`.
 
 Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
 
