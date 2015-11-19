@@ -1,6 +1,6 @@
 {
   "name": "require-hacker",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Provides a hooking mechanism for Node.js require() calls",
   "main": "babel-transpiled-modules/index.js",
   "dependencies": {
