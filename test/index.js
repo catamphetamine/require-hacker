@@ -185,9 +185,8 @@ describe('require hacker', function()
 
 	it('should resolve paths', function()
 	{
-		require_hacker.resolve('/absolute', module).should.equal('/absolute')
-		require_hacker.resolve('./some file.txt', module).should.equal(path.resolve(__dirname, 'some file.txt'))
-		require_hacker.resolve('../some file.txt', module).should.equal(path.resolve(__dirname, '../some file.txt'))
+		require_hacker.resolve('./test.txt', module).should.equal(path.resolve(__dirname, 'test.txt'))
+		require_hacker.resolve('../package', module).should.equal(path.resolve(__dirname, '../package.json'))
 		require_hacker.resolve('babel-runtime/core-js', module).should.equal(path.resolve(__dirname, '../node_modules/babel-runtime/core-js.js'))
 	})
 })

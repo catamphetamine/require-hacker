@@ -250,28 +250,11 @@ const require_hacker =
 	// (resolves `npm link`, etc)
 	resolve(path_to_resolve, module)
 	{
-		// https://nodejs.org/api/modules.html#modules_file_modules
-
-		// if it's an absolute path then return it
-		if (starts_with(path_to_resolve, '/'))
-		{
-			return path_to_resolve
-		}
-
-		// if it's a relative path then simply resolve it against module.filename
-		if (path_to_resolve === '.' 
-			|| path_to_resolve === '..' 
-			|| starts_with(path_to_resolve, './') 
-			|| starts_with(path_to_resolve, '../'))
-		{
-			return path.resolve(path.dirname(module.filename), path_to_resolve)
-		}
-
 		// Module._resolveFilename existence check is perfomed outside of this method
 		try
 		{
 			require_hacker.global_hooks_enabled = false
-			return Module._resolveFilename(path_to_resolve, module)
+			return original_resolveFilename(path_to_resolve, module)
 		}
 		finally
 		{
