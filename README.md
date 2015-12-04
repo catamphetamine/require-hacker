@@ -155,9 +155,22 @@ Returns an object with `.unmount()` method which unmounts this `require()` hook 
 The `resolve` function takes two parameters:
 
   * the `path` which is `require()`d.
-  * the `module` in which the `require()` call was originated
+  * the `module` in which the `require()` call was originated (this `module` parameter can be used for `require_hacker.resolve(path, module)` function call)
 
-The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
+The `resolve` function must either return a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
+
+#### .resolver(resolve)
+
+Can intercept all `require()` calls and return a custom `require()`d path if needed (this process is called "resolving").
+
+Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
+
+The `resolve` function takes two parameters:
+
+  * the `path` which is `require()`d.
+  * the `module` in which the `require()` call was originated (this `module` parameter can be used for `require_hacker.resolve(path, module)` function call)
+
+The `resolve` function must either return a real filesystem path to a javascript (or json) file or it can simply `return` nothing and in that case it will take no effect.
 
 #### .to_javascript_module_source(anything)
 
@@ -165,7 +178,7 @@ Converts anyting (an undefined, a string, a JSON object, a function, a regular e
 
 #### .resolve(path, module)
 
-Resolves a requireable `path` to a real filesystem path relative to the `module` (resolves `npm link`, global `node_modules`, etc), just an alias to a native Node.js function.
+Resolves a requireable `path` to a real filesystem path to a javascript (or json) file. Resolution is performed relative to the `module` (javascript file) passed as the second parameter (resolves `npm link`, global `node_modules`, etc). It's just an alias to the native Node.js path resolution function.
 
 ## Gotchas
 

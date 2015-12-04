@@ -26,6 +26,51 @@ const require_hacker =
 	// logging
 	log: new Log('require-hook', { debug: false }), // this.options.debug
 
+	// installs a require() path resolver 
+	//
+	// resolve - a function which takes two parameters:
+	//
+	//             the path to be resolved
+	//             the module in which the require() call was originated
+	//
+	//           must return either a new path to the require()d module
+	//           or it can return nothing to fall back to the original require()d module path
+	//
+	// returns an object with an .unmount() method
+	//
+	resolver(resolve)
+	{
+		validate.resolve(resolve)
+
+		const resolver = (path, module) =>
+		{
+			// resolve the path for this require() call
+			const resolved_path = resolve(path, module)
+			
+			// if no path was resolved - do nothing
+			if (!exists(resolved_path))
+			{
+				return
+			}
+
+			// return the path to be require()d 
+			return resolved_path
+		}
+
+		require_hacker.preceding_path_resolvers.push(resolver)
+
+		const result =
+		{
+			unmount: () =>
+			{
+				// javascript arrays still have no .remove() method in the XXI-st century
+				require_hacker.preceding_path_resolvers = require_hacker.preceding_path_resolvers.filter(x => x !== resolver)
+			}
+		}
+
+		return result
+	},
+
 	// installs a global require() hook for all paths 
 	//
 	// (if these paths are certain to exist in the filesystem
@@ -43,7 +88,7 @@ const require_hacker =
 	//           (i.e. "module.exports = ...", etc)
 	//           or it can return nothing to fall back to the original Node.js loader
 	//
-	// returns an object with an .undo() method
+	// returns an object with an .unmount() method
 	//
 	// options:
 	//
@@ -57,41 +102,44 @@ const require_hacker =
 	//
 	//     default value: true
 	//
-	global_hook(id, resolver, options = {})
+	global_hook(id, resolve, options = {})
 	{
-		validate.global_hook(id, resolver)
+		validate.global_hook(id, resolve)
 
-		const resolver_entry = 
+		const resolver = (path, module) =>
 		{
-			id,
-			resolve: (path, module) =>
+			// get CommonJS module source code for this require() call
+			const source = resolve(path, module)
+			
+			// if no CommonJS module source code returned - skip this require() hook
+			if (!exists(source))
 			{
-				const resolved_path = `${path}.${id}`
-				
-				// CommonJS module source code
-				const source = resolver(path, module)
-				
-				if (!exists(source))
-				{
-					return
-				}
-				
-				// const flush_cache = () => delete require.cache[resolved_path]
-				delete require.cache[resolved_path]
-
-				require_hacker.global_hook_resolved_modules[resolved_path] = source
-
-				return resolved_path
+				return
 			}
+			
+			// CommonJS module source code returned, 
+			// so put it into a hash for a corresponding key
+
+			const resolved_path = `${path}.${id}`
+			
+			// flush require() cache
+			delete require.cache[resolved_path]
+
+			// put the CommonJS module source code into the hash
+			require_hacker.global_hook_resolved_modules[resolved_path] = source
+
+			// return the path to be require()d 
+			// in order to get the CommonJS module source code
+			return resolved_path
 		}
 
 		if (options.precede_node_loader === false)
 		{
-			require_hacker.path_resolvers.push(resolver_entry)
+			require_hacker.path_resolvers.push(resolver)
 		}
 		else
 		{
-			require_hacker.preceding_path_resolvers.push(resolver_entry)
+			require_hacker.preceding_path_resolvers.push(resolver)
 		}
 
 		const hook = this.hook(id, path => 
@@ -106,8 +154,8 @@ const require_hacker =
 			unmount: () =>
 			{
 				// javascript arrays still have no .remove() method in the XXI-st century
-				require_hacker.preceding_path_resolvers = require_hacker.preceding_path_resolvers.filter(x => x !== resolver_entry)
-				require_hacker.path_resolvers = require_hacker.path_resolvers.filter(x => x !== resolver_entry)
+				require_hacker.preceding_path_resolvers = require_hacker.preceding_path_resolvers.filter(x => x !== resolver)
+				require_hacker.path_resolvers = require_hacker.path_resolvers.filter(x => x !== resolver)
 				hook.unmount()
 			}
 		}
@@ -366,10 +414,10 @@ Module._findPath = (...parameters) =>
 	{
 		for (let resolver of require_hacker.preceding_path_resolvers)
 		{
-			const resolved = resolver.resolve(request, require_caller)
-			if (exists(resolved))
+			const resolved_path = resolver(request, require_caller)
+			if (exists(resolved_path))
 			{
-				return resolved
+				return resolved_path
 			}
 		}
 	}

@@ -175,6 +175,28 @@ describe('require hacker', function()
 		hook.unmount()
 	})
 
+	it('should resolve', function()
+	{
+		// for example, it can prefix all require() paths
+
+		let resolver = require_hacker.resolver(path => '/gay_xxx/dummy.js')
+
+		// path separators get messed up between different OSes
+		;(() => require('./dummy.js')).should.throw('gay_xxx')
+
+		resolver.unmount()
+
+		require('./dummy.js').should.equal('Hot lesbians making out')
+
+		// return nothing should take no effect
+
+		resolver = require_hacker.resolver(path => { return })
+
+		require('./dummy.js').should.equal('Hot lesbians making out')
+
+		resolver.unmount()
+	})
+
 	it('should convert to javascript module source', function()
 	{
 		require_hacker.to_javascript_module_source().should.equal('module.exports = undefined')
