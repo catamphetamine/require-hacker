@@ -170,7 +170,7 @@ const require_hacker =
 		// set new loader for this extension
 		Module._extensions[dot_extension] = (module, filename) =>
 		{
-			this.log.debug(`Loading source code for ${filename}`)
+			this.log.debug(`require() hook fired for ${filename}`)
 
 			// var source = fs.readFileSync(filename, 'utf8')
 			const source = resolve(filename, module)
