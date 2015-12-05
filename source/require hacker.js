@@ -108,6 +108,8 @@ const require_hacker =
 
 		const resolver = (path, module) =>
 		{
+			// log.debug(`Global require() hook "${id}" fired`)
+
 			// get CommonJS module source code for this require() call
 			const source = resolve(path, module)
 			
@@ -393,6 +395,7 @@ Module._resolveFilename = function(...parameters)
 	const parent = parameters[1]
 
 	// take note of the require() caller
+	// (the module in which this require() call originated)
 	require_caller = parent
 
 	return original_resolveFilename.apply(this, parameters)
