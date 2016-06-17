@@ -178,7 +178,7 @@ Converts anyting (an undefined, a string, a JSON object, a function, a regular e
 
 #### .resolve(path, module)
 
-Resolves a requireable `path` to a real filesystem path to a javascript (or json) file. Resolution is performed relative to the `module` (javascript file) passed as the second parameter (resolves `npm link`, global `node_modules`, etc). It's just an alias to the native Node.js path resolution function.
+Resolves a requireable `path` to a real filesystem path to a javascript (or json) file. Resolution is performed relative to the `module` (javascript file) passed as the second parameter (resolves `npm link`, global `node_modules`, etc). It's just an alias to the native Node.js path resolution function. Will throw `Error: Cannot find module '...'` if the `path` isn't resolved to an existing javascript (or json) file.
 
 ## Gotchas
 

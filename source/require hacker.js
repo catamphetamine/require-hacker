@@ -24,7 +24,7 @@ const require_hacker =
 	occupied_file_extensions: new Set(),
 
 	// logging
-	log: new Log('require-hook', { debug: false }), // this.options.debug
+	log: new Log('require-hacker', { debug: false }), // this.options.debug
 
 	// installs a require() path resolver 
 	//
