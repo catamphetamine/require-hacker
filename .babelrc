@@ -1,6 +1,13 @@
 {
-	"stage"    : 0,
-	"optional" : ["runtime"],
-	"loose"    : "all",
-	"plugins": []
+	"presets":
+	[
+		"es2015", 
+		"stage-0"
+	],
+
+	"plugins":
+	[
+		"transform-runtime",
+		"add-module-exports"
+	]
 }
