@@ -36,8 +36,8 @@ describe('require hacker', function()
 
 	it('shouldn\'t allow already occupied file extension override', function()
 	{
-		const test_hook = () => require_hacker.hook('test', path => {})
-		const test_global_hook = () => require_hacker.global_hook('test', path => ({ source: {}, path }))
+		const test_hook = () => require_hacker.hook('test', path => 'abc')
+		const test_global_hook = () => require_hacker.global_hook('test', path => ({ source: 'abc', path }))
 
 		// mount require() hook
 		const hook = test_hook()
