@@ -79,13 +79,19 @@ const require_hacker =
 	//
 	// id - a meaningful textual identifier
 	//
-	// resolve - a function which takes two parameters:
+	// The `resolve` function takes two parameters:
 	//
-	//             the path to be resolved
-	//             the module in which the require() call was originated
+	//   * the `path` which is `require()`d (e.g. a relative one)
+	//   * the `module` in which the `require()` call was originated (this `module` parameter can be used for `require_hacker.resolve(path, module)` function call)
+	//
+	// The `resolve` function must return either `undefined` (in which case it will skip this hook and proceed as normal) or an object `{ source, path }` where
+	//
+	//   * `source` is a valid CommonJS javascript module source code (i.e. "module.exports = ...", etc)
+	//   * `path` is the absolute path of the `path` argument passed to this `require()` function (which could be relative)
+	//
 	//
 	//           must return either a javascript CommonJS module source code
-	//           (i.e. "module.exports = ...", etc)
+	//           
 	//           or it can return nothing to fall back to the original Node.js loader
 	//
 	// returns an object with an .unmount() method
@@ -106,18 +112,26 @@ const require_hacker =
 	{
 		validate.global_hook(id, resolve)
 
-		const resolver = (path, module) =>
+		const resolver = (required_path, module) =>
 		{
 			// log.debug(`Global require() hook "${id}" fired`)
 
 			// get CommonJS module source code for this require() call
-			const source = resolve(path, module)
+			const resolved = resolve(required_path, module)
 			
 			// if no CommonJS module source code returned - skip this require() hook
-			if (!exists(source))
+			if (!exists(resolved))
 			{
 				return
 			}
+
+			// Sanity check for older 2.x.x version users
+			if (typeof resolved !== 'object')
+			{
+				throw new Error(`require-hacker@3.0.0 now only accepts a "resolve" function parameter to "global_hook" which returns an object of shape "{ source, path }" rather than simply returning "source"`)
+			}
+
+			const { source, path } = resolved
 			
 			// CommonJS module source code returned, 
 			// so put it into a hash for a corresponding key
@@ -225,34 +239,35 @@ const require_hacker =
 			// var source = fs.readFileSync(filename, 'utf8')
 			const source = resolve(filename, module)
 
-			if (!exists(source))
+			if (exists(source))
 			{
-				this.log.debug(`Fallback to original loader`)
+				// add this file path to the list of cached modules
+				cached_modules.add(filename)
 
-				// this message would appear if there was no loader 
-				// for the extension of the filename
-				if (path.extname(filename) !== dot_extension)
+				// Node.js inner API check
+				/* istanbul ignore if */
+				if (!module._compile)
 				{
-					this.log.info(`Trying to load "${path.basename(filename)}" as a "*${dot_extension}"`)
+					throw new Error('Incompatilbe Node.js version detected: "Module.prototype._compile" function is missing. File an issue on GitHub.')
 				}
 
-				// load the file with the original loader
-				return (original_loader || Module._extensions['.js'])(module, filename)
+				// compile javascript module from its source
+				// https://github.com/nodejs/node/blob/master/lib/module.js#L379
+				module._compile(source, filename)
+				return
 			}
 
-			// add this file path to the list of cached modules
-			cached_modules.add(filename)
+			this.log.debug(`Fallback to original loader`)
 
-			// Node.js inner API check
-			/* istanbul ignore if */
-			if (!module._compile)
+			// this message would appear if there was no loader 
+			// for the extension of the filename
+			if (path.extname(filename) !== dot_extension)
 			{
-				throw new Error('Incompatilbe Node.js version detected: "Module.prototype._compile" function is missing. File an issue on GitHub.')
+				this.log.info(`Trying to load "${path.basename(filename)}" as a "*${dot_extension}"`)
 			}
 
-			// compile javascript module from its source
-			// https://github.com/nodejs/node/blob/master/lib/module.js#L379
-			module._compile(source, filename)
+			// load the file with the original loader
+			(original_loader || Module._extensions['.js'])(module, filename)
 		}
 
 		const result = 

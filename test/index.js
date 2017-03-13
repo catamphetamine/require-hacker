@@ -37,7 +37,7 @@ describe('require hacker', function()
 	it('shouldn\'t allow already occupied file extension override', function()
 	{
 		const test_hook = () => require_hacker.hook('test', path => {})
-		const test_global_hook = () => require_hacker.global_hook('test', path => {})
+		const test_global_hook = () => require_hacker.global_hook('test', path => ({ source: {}, path }))
 
 		// mount require() hook
 		const hook = test_hook()
@@ -90,7 +90,7 @@ describe('require hacker', function()
 		{
 			if (path.indexOf('http://xhamster.com') >= 0)
 			{
-				return `module.exports = "Free porn"`
+				return { source: `module.exports = "Free porn"`, path }
 			}
 		})
 
@@ -112,7 +112,7 @@ describe('require hacker', function()
 		{
 			if (path.indexOf('/dummy.js') >= 0)
 			{
-				return `module.exports = "Free porn"`
+				return { source: `module.exports = "Free porn"`, path }
 			}
 		})
 

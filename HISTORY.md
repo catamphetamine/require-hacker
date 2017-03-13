@@ -1,3 +1,8 @@
+3.0.0 / 13.03.2017
+==================
+
+  * Inside `global_hook` the `resolve()` function must now return an object `{ source, path }` (or `undefined`). The reason is that earlier it could pass a relative path to `resolve()` and then use that relative path when it should have used the absolute one. Therefore the `path` returned as part of the aforementioned object must be an absolute one.
+
 2.1.3 / 05.12.2015
 ==================
 

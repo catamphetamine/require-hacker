@@ -82,7 +82,8 @@ const hook = require_hacker.global_hook('network', path =>
   //    }
   //  }"
   //
-  return synchronous_http.get(path)
+  const source = synchronous_http.get(path)
+  return { source, path }
 })
 
 const readheads = require('http://xhamster.com/category/redhead')
@@ -111,7 +112,8 @@ const hook = require_hacker.global_hook('database', path =>
   //  }"
   //
   const schema = path.substring(0, 'postgresql://'.length)
-  return pg.sql(`select * from ${schema}.generate_javascript()`)
+  const source pg.sql(`select * from ${schema}.generate_javascript()`)
+  return { source, path }
 })
 
 const summator = require('postgresql://summator')
@@ -141,7 +143,7 @@ The `resolve` function takes two parameters:
   * the `path` which is `require()`d
   * the `module` in which the `require()` call was originated (this `module` parameter can be used for `require_hacker.resolve(path, module)` function call)
 
-The `resolve` function must return either a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
+The `resolve` function must return either a valid CommonJS javascript module source code (i.e. "module.exports = ...", etc) or it can simply `return` nothing and in that case it will skip this hook.
 
 #### .global_hook(meaningful_id, resolve, [options])
 
@@ -154,16 +156,19 @@ Returns an object with `.unmount()` method which unmounts this `require()` hook 
 
 The `resolve` function takes two parameters:
 
-  * the `path` which is `require()`d.
+  * the `path` which is `require()`d (e.g. a relative one)
   * the `module` in which the `require()` call was originated (this `module` parameter can be used for `require_hacker.resolve(path, module)` function call)
 
-The `resolve` function must either return a valid CommonJS javascript module source code or it can simply `return` nothing and in that case it will skip this hook.
+The `resolve` function must return either `undefined` (in which case it will skip this hook and proceed as normal) or an object `{ source, path }` where
+
+  * `source` is a valid CommonJS javascript module source code (i.e. "module.exports = ...", etc)
+  * `path` is the absolute path of the `path` argument passed to this `require()` function (which could be relative). This returned `path` is only gonna matter if `require()`ing some other relative path from the `source` being returned (because it would get resolved against this absolute `path`).
 
 #### .resolver(resolve)
 
-Can intercept all `require()` calls and return a custom `require()`d path if needed (this process is called "resolving").
+Can intercept all `require(path)` calls and tamper with the `path` modifying it if needed (this process is called "resolving").
 
-Returns an object with `.unmount()` method which unmounts this `require()` hook from the system.
+Returns an object with `.unmount()` method which unmounts this interceptor.
 
 The `resolve` function takes two parameters:
 
