@@ -1,13 +1,9 @@
 # require-hacker
 
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-[![Build Status][travis-image]][travis-url]
-[![Test Coverage][coveralls-image]][coveralls-url]
-
-<!---
-[![Gratipay][gratipay-image]][gratipay-url]
--->
+[![npm version](https://img.shields.io/npm/v/require-hacker.svg?style=flat-square)](https://www.npmjs.com/package/require-hacker)
+[![npm downloads](https://img.shields.io/npm/dm/require-hacker.svg?style=flat-square)](https://www.npmjs.com/package/require-hacker)
+[![build status](https://img.shields.io/travis/halt-hammerzeit/require-hacker/master.svg?style=flat-square)](https://travis-ci.org/halt-hammerzeit/require-hacker)
+[![coverage](https://img.shields.io/coveralls/halt-hammerzeit/require-hacker/master.svg?style=flat-square)](https://coveralls.io/r/halt-hammerzeit/require-hacker?branch=master)
 
 Is a small helper module providing tools for instrumenting Node.js `require()` calls.
 
@@ -236,16 +232,3 @@ npm install [module name with version].tar.gz
 ## License
 
 [MIT](LICENSE)
-[npm-image]: https://img.shields.io/npm/v/require-hacker.svg
-[npm-url]: https://npmjs.org/package/require-hacker
-[travis-image]: https://img.shields.io/travis/halt-hammerzeit/require-hacker/master.svg
-[travis-url]: https://travis-ci.org/halt-hammerzeit/require-hacker
-[downloads-image]: https://img.shields.io/npm/dm/require-hacker.svg
-[downloads-url]: https://npmjs.org/package/require-hacker
-[coveralls-image]: https://img.shields.io/coveralls/halt-hammerzeit/require-hacker/master.svg
-[coveralls-url]: https://coveralls.io/r/halt-hammerzeit/require-hacker?branch=master
-
-<!---
-[gratipay-image]: https://img.shields.io/gratipay/dougwilson.svg
-[gratipay-url]: https://gratipay.com/dougwilson/
--->
