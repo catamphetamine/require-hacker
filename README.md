@@ -2,8 +2,8 @@
 
 [![npm version](https://img.shields.io/npm/v/require-hacker.svg?style=flat-square)](https://www.npmjs.com/package/require-hacker)
 [![npm downloads](https://img.shields.io/npm/dm/require-hacker.svg?style=flat-square)](https://www.npmjs.com/package/require-hacker)
-[![build status](https://img.shields.io/travis/halt-hammerzeit/require-hacker/master.svg?style=flat-square)](https://travis-ci.org/halt-hammerzeit/require-hacker)
-[![coverage](https://img.shields.io/coveralls/halt-hammerzeit/require-hacker/master.svg?style=flat-square)](https://coveralls.io/r/halt-hammerzeit/require-hacker?branch=master)
+[![build status](https://img.shields.io/travis/catamphetamine/require-hacker/master.svg?style=flat-square)](https://travis-ci.org/catamphetamine/require-hacker)
+[![coverage](https://img.shields.io/coveralls/catamphetamine/require-hacker/master.svg?style=flat-square)](https://coveralls.io/r/catamphetamine/require-hacker?branch=master)
 
 Is a small helper module providing tools for instrumenting Node.js `require()` calls.
 

@@ -1,6 +1,6 @@
 {
   "name": "require-hacker",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Provides a hooking mechanism for Node.js require() calls",
   "main": "babel-transpiled-modules/index.js",
   "dependencies": {
@@ -31,15 +31,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/halt-hammerzeit/require-hacker.git"
+    "url": "git+https://github.com/catamphetamine/require-hacker.git"
   },
   "keywords": [
     "require"
   ],
-  "author": "Halt Hammerzeit <halt.hammerzeit.at@gmail.com>",
+  "author": "catamphetamine <purecatamphetamine@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/halt-hammerzeit/require-hacker/issues"
+    "url": "https://github.com/catamphetamine/require-hacker/issues"
   },
-  "homepage": "https://github.com/halt-hammerzeit/require-hacker#readme"
+  "homepage": "https://github.com/catamphetamine/require-hacker#readme"
 }
