@@ -73,7 +73,7 @@ describe('require hacker', function()
 		})
 
 		// will output text file contents
-		require('./test.txt').should.equal('Hot threesome interracial with double penetration')
+		require('./test.txt').should.equal('Expected content')
 
 		// unmount require() hook
 		hook.unmount()
@@ -88,20 +88,20 @@ describe('require hacker', function()
 		// mount require() hook
 		const hook = require_hacker.global_hook('textual', path =>
 		{
-			if (path.indexOf('http://xhamster.com') >= 0)
+			if (path.indexOf('https://wikipedia.org') >= 0)
 			{
-				return { source: `module.exports = "Free porn"`, path }
+				return { source: `module.exports = "New Content"`, path }
 			}
 		})
 
 		// will output text file contents
-		require('http://xhamster.com').should.equal('Free porn')
+		require('https://wikipedia.org').should.equal('New Content')
 
 		// unmount require() hook
 		hook.unmount()
 
 		// will throw "Error: Cannot find module"
-		const would_fail = () => require('http://xhamster.com')
+		const would_fail = () => require('https://wikipedia.org')
 		would_fail.should.throw('Cannot find module')
 	})
 
@@ -112,18 +112,18 @@ describe('require hacker', function()
 		{
 			if (path.indexOf('/dummy.js') >= 0)
 			{
-				return { source: `module.exports = "Free porn"`, path }
+				return { source: `module.exports = "New Content"`, path }
 			}
 		})
 
 		// will output text file contents
-		require('./dummy.js').should.equal('Free porn')
+		require('./dummy.js').should.equal('New Content')
 
 		// unmount require() hook
 		hook.unmount()
 
 		// usual Node.js loader takes precedence
-		require('./dummy.js').should.equal('Hot lesbians making out')
+		require('./dummy.js').should.equal('Content')
 		// clear require() cache (just in case)
 		delete require.cache[path.resolve(__dirname, './dummy.js')]
 
@@ -134,7 +134,7 @@ describe('require hacker', function()
 		})
 
 		// usual Node.js loader takes precedence
-		require('./dummy.js').should.equal('Hot lesbians making out')
+		require('./dummy.js').should.equal('Content')
 		// clear require() cache (just in case)
 		delete require.cache[path.resolve(__dirname, './dummy.js')]
 		
@@ -169,7 +169,7 @@ describe('require hacker', function()
 		})
 
 		// will output text file contents
-		require('./dummy.js').should.equal('Hot lesbians making out')
+		require('./dummy.js').should.equal('Content')
 
 		// unmount require() hook
 		hook.unmount()
@@ -179,20 +179,20 @@ describe('require hacker', function()
 	{
 		// for example, it can prefix all require() paths
 
-		let resolver = require_hacker.resolver(path => '/gay_xxx/dummy.js')
+		let resolver = require_hacker.resolver(path => '/unknown/dummy.js')
 
 		// path separators get messed up between different OSes
-		;(() => require('./dummy.js')).should.throw('gay_xxx')
+		;(() => require('./dummy.js')).should.throw('unknown')
 
 		resolver.unmount()
 
-		require('./dummy.js').should.equal('Hot lesbians making out')
+		require('./dummy.js').should.equal('Content')
 
 		// return nothing should take no effect
 
 		resolver = require_hacker.resolver(path => { return })
 
-		require('./dummy.js').should.equal('Hot lesbians making out')
+		require('./dummy.js').should.equal('Content')
 
 		resolver.unmount()
 	})

@@ -61,7 +61,7 @@ Something unusual
 ```javascript
 const hook = require_hacker.global_hook('network', path =>
 {
-  if (!path.starts_with('http://xhamster.com'))
+  if (!path.starts_with('http://thor.onion/module'))
   {
     return
   }
@@ -70,11 +70,11 @@ const hook = require_hacker.global_hook('network', path =>
   //
   // "module.exports =
   //  {
-  //    category   : 'redhead',
-  //    videos     : [12345, 12346, 12347],
+  //    category   : 'module.js',
+  //    versions     : ['1.0.0', '1.0.1'],
   //    unsubscribe: function()
   //    {
-  //      http.post('http://xhamster.com/unsubscribe', { user: 123 })
+  //      http.post('http://thor.onion/module/unsubscribe', { id: 123 })
   //    }
   //  }"
   //
@@ -82,8 +82,8 @@ const hook = require_hacker.global_hook('network', path =>
   return { source, path }
 })
 
-const readheads = require('http://xhamster.com/category/redhead')
-readheads.unsubscribe()
+const dependency = require('http://thor.onion/module/third-party-dependency')
+dependency.unsubscribe()
 ```
 
 Or
