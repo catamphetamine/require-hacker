@@ -1,1 +1,1 @@
-module.exports = "Hot lesbians making out"
+module.exports = "Content"
