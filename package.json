@@ -5,7 +5,7 @@
   "main": "babel-transpiled-modules/index.js",
   "dependencies": {
     "babel-runtime": "^6.6.1",
-    "colors": "^1.1.2"
+    "@dabh/colors": "^1.1.2"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",
